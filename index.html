@@ -10,7 +10,7 @@
     
     <style>
         :root {
-            --primary-color: #4f46e5;
+            --primary-color: #D82727;
             --bg-color: #f1f5f9;
             --card-bg: #ffffff;
             --text-main: #1e293b;
@@ -114,15 +114,20 @@
             padding: 0.75rem;
             border-radius: 8px;
         }
-        .btn-primary-custom:hover { background-color: #4338ca; }
+        .btn-primary-custom:hover { background-color: #D82727; }
+
+        .w-logo{
+            width: 80px;
+        }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+<nav class="navbar navbar-expand-lg bg-white mb-4 shadow-sm">
     <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold" href="#">
-            <i class="bi bi-calculator me-2"></i>CPL Logic Studio
+        <a class="navbar-brand fw-bold w-100 d-flex align-items-center justify-content-between" href="#">
+            <img src="./public/img/cpl-logo.png" class="w-logo"/>
+            </i>CPL Logic Studio
         </a>
     </div>
 </nav>
@@ -141,7 +146,7 @@
                 <div class="card-body p-4">
                     <form id="valuationForm">
                         
-                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Case Details</h6>
+                        <h6 class=" fw-bold mb-3 border-bottom pb-2">Case Details</h6>
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label class="form-label">Case Type</label>
@@ -161,7 +166,7 @@
                             </div>
                         </div>
 
-                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Asset & Pricing</h6>
+                        <h6 class=" fw-bold mb-3 border-bottom pb-2">Asset & Pricing</h6>
                         <div class="row g-3 mb-4">
                             <div class="col-6">
                                 <label class="form-label">Veh. Age (Yrs)</label>
@@ -187,7 +192,7 @@
                             </div>
                         </div>
 
-                        <h6 class="text-primary fw-bold mb-3 border-bottom pb-2">Bureau Data</h6>
+                        <h6 class=" fw-bold mb-3 border-bottom pb-2">Bureau Data</h6>
                         <div class="mb-4">
                             <label class="form-label d-flex justify-content-between">
                                 <span>Equifax JSON Payload</span>
@@ -196,7 +201,7 @@
                             <textarea class="form-control code-editor" id="equifaxJson" rows="8" placeholder="// Paste full Equifax response object here..."></textarea>
                         </div>
 
-                        <button type="button" class="btn btn-primary btn-primary-custom w-100 py-3 shadow-sm" onclick="runValuation()">
+                        <button type="button" class="btn btn-danger btn-primary-custom w-100 py-3 shadow-sm" onclick="runValuation()">
                             <i class="bi bi-play-fill me-1"></i> Run Logic Simulation
                         </button>
                     </form>
@@ -228,8 +233,8 @@
                     <div class="col-md-6">
                         <div class="card-custom h-100 p-4 border-start border-5 border-primary">
                             <h6 class="text-muted text-uppercase mb-3">Valuation Range</h6>
-                            <h3 class="fw-bold text-primary mb-1" id="valAmount">₹0 - ₹0</h3>
-                            <span class="badge bg-primary bg-opacity-10 text-primary" id="valPercent">0% - 0% LTV</span>
+                            <h3 class="fw-bold  mb-1" id="valAmount">₹0 - ₹0</h3>
+                            <span class="badge bg-primary bg-opacity-10 " id="valPercent">0% - 0% LTV</span>
                         </div>
                     </div>
                     <div class="col-md-6">
