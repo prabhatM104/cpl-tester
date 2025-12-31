@@ -3,349 +3,482 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Valuation Logic Studio</title>
+    <title>CPL Quantum Valuation</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <style>
         :root {
-            --primary-color: #D82727;
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border-radius: 12px;
+            --bg-deep: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --accent-primary: #3b82f6;
+            --accent-glow: #60a5fa;
+            --success-glow: #34d399;
+            --danger-glow: #f87171;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-glass: 1px solid rgba(255, 255, 255, 0.1);
+            --header-height: 100px; /* Defined height for calculation */
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+            background-attachment: fixed;
             color: var(--text-main);
-            padding-bottom: 50px;
+            font-family: 'Outfit', sans-serif;
+            /* LOCK VIEWPORT FOR DASHBOARD SCROLL */
+            height: 100vh;
+            overflow: hidden; 
+            margin: 0;
+            padding: 0 !important;
         }
 
-        /* Modern Card Styling */
-        .card-custom {
-            background: var(--card-bg);
-            border: none;
-            border-radius: var(--border-radius);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            margin-bottom: 24px;
-            overflow: hidden;
-        }
-
-        .card-header-custom {
-            background: #fff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 1.5rem;
-        }
-
-        .form-label {
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-        }
-
-        .form-control, .form-select {
-            border-radius: 8px;
-            border: 1px solid #cbd5e1;
-            padding: 0.6rem 1rem;
-            transition: all 0.2s;
-        }
-
-        .form-control:focus, .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
-
-        /* Code Editor Style */
-        .code-editor {
-            background-color: #1e293b;
-            color: #e2e8f0;
-            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
-            font-size: 0.85rem;
-            border: 1px solid #334155;
-        }
-
-        /* Result Section Styles */
-        .status-banner {
-            padding: 2rem;
-            border-radius: var(--border-radius);
-            color: white;
-            margin-bottom: 1.5rem;
+        /* Fixed Header */
+        .app-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--header-height);
+            z-index: 1030;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            transition: background 0.3s ease;
         }
-        .status-banner.approved { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
-        .status-banner.rejected { background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); }
-        .status-banner.default { background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%); }
 
-        .metric-card {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 1rem;
+        /* Scrollable Content Area */
+        .main-scroll-area {
+            margin-top: var(--header-height); /* Push down by header height */
+            height: calc(100vh - var(--header-height)); /* Fill remaining space */
+            overflow-y: auto; /* Scrollbar appears here, below header */
+            padding: 2rem;
+            width: 100%;
+        }
+
+        /* Glass Card Utility */
+        .glass-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: var(--border-glass);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Input Selectors as Cards */
+        .selector-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .radio-card-input { display: none; }
+        
+        .radio-card-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             text-align: center;
             height: 100%;
         }
-        .metric-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.5rem; }
-        .metric-val { font-size: 1.25rem; font-weight: 700; color: var(--text-main); }
 
-        /* JSON Output Pre tag */
-        pre.json-output {
-            background: #0f172a;
-            color: #38bdf8;
-            padding: 1rem;
-            border-radius: 8px;
-            max-height: 400px;
-            overflow-y: auto;
-            font-size: 0.8rem;
+        .radio-card-label i { font-size: 1.5rem; margin-bottom: 8px; color: var(--text-muted); transition: color 0.2s;}
+        .radio-card-label span { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); }
+
+        .radio-card-input:checked + .radio-card-label {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
         }
+        .radio-card-input:checked + .radio-card-label i,
+        .radio-card-input:checked + .radio-card-label span { color: white; }
 
-        .btn-primary-custom {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
+        /* Modern Inputs */
+        .floating-input-group {
+            position: relative;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 5px 15px;
+            transition: border-color 0.3s;
+        }
+        .floating-input-group:focus-within { border-color: var(--accent-primary); }
+        
+        .custom-input {
+            background: transparent;
+            border: none;
             color: white;
+            width: 100%;
+            padding: 8px 0;
+            font-size: 1.1rem;
             font-weight: 600;
-            padding: 0.75rem;
-            border-radius: 8px;
+            outline: none;
         }
-        .btn-primary-custom:hover { background-color: #D82727; }
+        .input-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
 
-        .w-logo{
-            width: 80px;
+        /* Neon Button */
+        .btn-neon {
+            background: linear-gradient(90deg, #2563eb, #3b82f6);
+            border: none;
+            color: white;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            padding: 18px;
+            border-radius: 16px;
+            width: 100%;
+            font-size: 1.1rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
         }
+        .btn-neon:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.6);
+        }
+        .btn-neon::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: 0.5s;
+        }
+        .btn-neon:hover::after { left: 100%; }
+
+        /* Code Editor Area */
+        .code-area {
+            font-family: 'JetBrains Mono', monospace;
+            background: #0b0f19;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #a5b4fc;
+            font-size: 0.8rem;
+            border-radius: 12px;
+            resize: vertical;
+        }
+        .code-area:focus { border-color: var(--accent-primary); outline: none; }
+
+        /* Results HUD */
+        .hud-display { display: none; animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        .status-pill {
+            display: inline-flex; align-items: center; padding: 8px 20px;
+            border-radius: 50px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+            font-size: 0.9rem; margin-bottom: 20px;
+        }
+        .status-approved { background: rgba(52, 211, 153, 0.15); color: #34d399; border: 1px solid #34d399; box-shadow: 0 0 15px rgba(52, 211, 153, 0.2); }
+        .status-rejected { background: rgba(248, 113, 113, 0.15); color: #f87171; border: 1px solid #f87171; box-shadow: 0 0 15px rgba(248, 113, 113, 0.2); }
+
+        .big-money {
+            font-size: 3rem; font-weight: 800;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .metric-tile {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px; padding: 12px; text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .metric-tile h4 { font-size: 1.2rem; margin: 0; font-weight: 700; color: white; }
+        .metric-tile span { font-size: 0.7rem; text-transform: uppercase; color: var(--text-muted); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg bg-white mb-4 shadow-sm">
-    <div class="container-fluid px-4">
-        <a class="navbar-brand fw-bold w-100 d-flex align-items-center justify-content-between" href="#">
-            <img src="./public/img/cpl-logo.png" class="w-logo"/>
-            </i>CPL Logic Studio
-        </a>
-    </div>
-</nav>
-
-<div class="container-fluid px-lg-5">
-    <div class="row g-4">
-        
-        <div class="col-lg-5">
-            <div class="card-custom">
-                <div class="card-header-custom d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 fw-bold">Configuration</h5>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="loadSampleData()">
-                        <i class="bi bi-file-earmark-code me-1"></i> Load Sample
-                    </button>
-                </div>
-                <div class="card-body p-4">
-                    <form id="valuationForm">
-                        
-                        <h6 class=" fw-bold mb-3 border-bottom pb-2">Case Details</h6>
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label">Case Type</label>
-                                <select class="form-select" id="caseType">
-                                    <option value="new_car">New Car</option>
-                                    <option value="used_car" selected>Used Car</option>
-                                    <option value="existing_car">Refinance / Existing</option>
-                                    <option value="not_finalized">Not Finalized</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Ownership Type</label>
-                                <select class="form-select" id="commercialStatus">
-                                    <option value="no">Private Individual</option>
-                                    <option value="yes">Commercial</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <h6 class=" fw-bold mb-3 border-bottom pb-2">Asset & Pricing</h6>
-                        <div class="row g-3 mb-4">
-                            <div class="col-6">
-                                <label class="form-label">Veh. Age (Yrs)</label>
-                                <input type="number" class="form-control" id="vage" value="4">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Owner Serial #</label>
-                                <input type="number" class="form-control" id="ownerNumber" value="1">
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">Fair Market Price</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₹</span>
-                                    <input type="number" class="form-control" id="fairPrice" value="500000">
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label">On Road (New)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">₹</span>
-                                    <input type="number" class="form-control" id="onRoadPrice" value="800000">
-                                </div>
-                            </div>
-                        </div>
-
-                        <h6 class=" fw-bold mb-3 border-bottom pb-2">Bureau Data</h6>
-                        <div class="mb-4">
-                            <label class="form-label d-flex justify-content-between">
-                                <span>Equifax JSON Payload</span>
-                                <span class="badge bg-secondary">JSON</span>
-                            </label>
-                            <textarea class="form-control code-editor" id="equifaxJson" rows="8" placeholder="// Paste full Equifax response object here..."></textarea>
-                        </div>
-
-                        <button type="button" class="btn btn-danger btn-primary-custom w-100 py-3 shadow-sm" onclick="runValuation()">
-                            <i class="bi bi-play-fill me-1"></i> Run Logic Simulation
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-7">
-            <div id="welcomePlaceholder" class="card-custom p-5 text-center text-muted">
-                <i class="bi bi-cpu fs-1 mb-3 d-block"></i>
-                <h5>Ready to Process</h5>
-                <p>Configure inputs on the left and click "Run Logic Simulation"</p>
-            </div>
-
-            <div id="resultsArea" style="display:none;">
-                
-                <div id="mainResultBanner" class="status-banner default shadow-sm">
+    <header class="app-header">
+        <div class="container-fluid" style="max-width: 1400px;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:50px; height:50px; background:var(--accent-primary); border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 20px rgba(59,130,246,0.5);">
+                        <i class="bi bi-cpu-fill text-white fs-4"></i>
+                    </div>
                     <div>
-                        <h2 class="mb-0 fw-bold" id="resTitle">Processing...</h2>
-                        <p class="mb-0 opacity-75" id="resSubtitle">Analyzing credit data</p>
-                    </div>
-                    <div class="text-end">
-                        <div class="display-6 fw-bold" id="scoreDisplay">---</div>
-                        <div class="small text-uppercase">Credit Score</div>
+                        <h3 class="fw-bold m-0 lh-1">CPL</h3>
+                        <small class="">Valuation Logic Engine</small>
                     </div>
                 </div>
-
-                <div class="row g-3 mb-4">
-                    <div class="col-md-6">
-                        <div class="card-custom h-100 p-4 border-start border-5 border-primary">
-                            <h6 class="text-muted text-uppercase mb-3">Valuation Range</h6>
-                            <h3 class="fw-bold  mb-1" id="valAmount">₹0 - ₹0</h3>
-                            <span class="badge bg-primary bg-opacity-10 " id="valPercent">0% - 0% LTV</span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="card-custom h-100 p-4 border-start border-5 border-success">
-                            <h6 class="text-muted text-uppercase mb-3">Estimated EMI</h6>
-                            <h3 class="fw-bold text-success mb-1" id="emiAmount">₹0 - ₹0</h3>
-                            <div class="small text-muted mt-2">
-                                <i class="bi bi-clock me-1"></i> <span id="finalTenure">0</span> Months @ 
-                                <i class="bi bi-percent me-1"></i> <span id="finalRate">0</span>%
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="rejectionSection" class="alert alert-danger shadow-sm border-0 mb-4" style="display:none;">
-                    <h5 class="alert-heading fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Application Declined</h5>
-                    <hr>
-                    <p class="mb-2">The following criteria were not met:</p>
-                    <ul id="rejectionList" class="mb-0 fw-semibold"></ul>
-                </div>
-
-                <div class="card-custom">
-                    <div class="card-header-custom">
-                        <h6 class="mb-0 fw-bold"><i class="bi bi-bug me-2"></i>Logic Internals (Computed)</h6>
-                    </div>
-                    <div class="card-body p-2">
-                        <div class="row g-3">
-                            <div class="col-6 col-md-4 col-xl-2">
-                                <div class="metric-card">
-                                    <div class="metric-label">Max DPD (3M)</div>
-                                    <div class="metric-val" id="debugMaxAnyDpd3">-</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4 col-xl-2">
-                                <div class="metric-card">
-                                    <div class="metric-label">Car DPD (3M)</div>
-                                    <div class="metric-val" id="debugMaxCarDpd3">-</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4 col-xl-2">
-                                <div class="metric-card">
-                                    <div class="metric-label">Car DPD (6M)</div>
-                                    <div class="metric-val" id="debugMaxCarDpd6">-</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4 col-xl-2">
-                                <div class="metric-card">
-                                    <div class="metric-label">Tenure Elig.</div>
-                                    <div class="metric-val" id="debugEligibleTenure">-</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4 col-xl-2">
-                                <div class="metric-card">
-                                    <div class="metric-label">Overdue</div>
-                                    <div class="metric-val" id="debugOverdue">-</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4 col-xl-2">
-                                <div class="metric-card">
-                                    <div class="metric-label">High Due</div>
-                                    <div class="metric-val" id="debugDueCount">-</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="accordion shadow-sm" id="accordionOutput">
-                    <div class="accordion-item border-0 overflow-hidden" style="border-radius: var(--border-radius);">
-                        <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button collapsed fw-bold bg-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOutput" aria-expanded="false" aria-controls="collapseOutput">
-                                <i class="bi bi-code-slash me-2"></i> View Full Response Object
-                            </button>
-                        </h2>
-                        <div id="collapseOutput" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionOutput">
-                            <div class="accordion-body p-0">
-                                <pre id="rawOutput" class="json-output m-0"></pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
+                <button class="btn btn-outline-light btn-sm rounded-pill px-3" onclick="loadSampleData()">
+                    <i class="bi bi-lightning-fill me-1"></i> Auto-Fill
+                </button>
             </div>
         </div>
+    </header>
+
+    <div class="main-scroll-area">
+        <div class="container-fluid" style="max-width: 1400px;">
+            <div class="row g-4">
+                
+                <div class="col-lg-5">
+                    <div class="glass-panel p-4 h-100">
+                        <form id="valuationForm">
+                            
+                            <label class="input-label mb-3"><i class="bi bi-grid-fill me-1"></i> Application Type</label>
+                            <div class="selector-grid mb-4">
+                                <input type="radio" name="caseType" id="type_used" value="used_car" class="radio-card-input" checked>
+                                <label for="type_used" class="radio-card-label">
+                                    <i class="bi bi-car-front-fill"></i>
+                                    <span>Used Car</span>
+                                </label>
+                                <input type="radio" name="caseType" id="type_new" value="new_car" class="radio-card-input">
+                                <label for="type_new" class="radio-card-label">
+                                    <i class="bi bi-stars"></i>
+                                    <span>New Car</span>
+                                </label>
+                                <input type="radio" name="caseType" id="type_existing" value="existing_car" class="radio-card-input">
+                                <label for="type_existing" class="radio-card-label">
+                                    <i class="bi bi-cash-coin"></i>
+                                    <span>Refinance</span>
+                                </label>
+                                <input type="radio" name="caseType" id="type_nofinal" value="not_finalized" class="radio-card-input">
+                                <label for="type_nofinal" class="radio-card-label">
+                                    <i class="bi bi-question-circle"></i>
+                                    <span>Pending</span>
+                                </label>
+                            </div>
+
+                            <label class="input-label mb-3"><i class="bi bi-person-badge-fill me-1"></i> Ownership Class</label>
+                            <div class="d-flex gap-3 mb-4">
+                                <input type="radio" name="commercialStatus" id="comm_no" value="no" class="radio-card-input" checked>
+                                <label for="comm_no" class="radio-card-label flex-fill">
+                                    <i class="bi bi-person-fill"></i>
+                                    <span>Private Individual</span>
+                                </label>
+
+                                <input type="radio" name="commercialStatus" id="comm_yes" value="yes" class="radio-card-input">
+                                <label for="comm_yes" class="radio-card-label flex-fill">
+                                    <i class="bi bi-briefcase-fill"></i>
+                                    <span>Commercial</span>
+                                </label>
+                            </div>
+
+                            <div class="row g-3 mb-4">
+                                <div class="col-6">
+                                    <div class="floating-input-group">
+                                        <div class="input-label">Vehicle Age (Years)</div>
+                                        <input type="number" id="vage" class="custom-input" value="4">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="floating-input-group">
+                                        <div class="input-label">Owner Serial</div>
+                                        <input type="number" id="ownerNumber" class="custom-input" value="1">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="floating-input-group">
+                                        <div class="input-label">Fair Market (₹)</div>
+                                        <input type="number" id="fairPrice" class="custom-input" value="500000">
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="floating-input-group">
+                                        <div class="input-label">On Road New (₹)</div>
+                                        <input type="number" id="onRoadPrice" class="custom-input" value="800000">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <label class="input-label mb-2 d-flex justify-content-between">
+                                <span><i class="bi bi-code-slash me-1"></i> Equifax Payload</span>
+                                <span class="badge bg-dark border border-secondary text-secondary">JSON</span>
+                            </label>
+                            <textarea id="equifaxJson" class="form-control code-area mb-4" rows="6" placeholder="// Paste Equifax response object here..."></textarea>
+
+                            <button type="button" class="btn-neon" onclick="runValuation()">
+                                INITIATE ANALYSIS <i class="bi bi-arrow-right-short fs-4 align-middle"></i>
+                            </button>
+
+                        </form>
+                    </div>
+                </div>
+
+                <div class="col-lg-7">
+                    
+                    <div id="welcomePlaceholder" class="glass-panel h-100 d-flex flex-column align-items-center justify-content-center text-center p-5 opacity-50">
+                        <i class="bi bi-grid-3x3-gap-fill fs-1 mb-3"></i>
+                        <h3>Awaiting Input</h3>
+                        <p>Configure parameters to generate valuation report.</p>
+                    </div>
+
+                    <div id="resultsArea" class="hud-display h-100">
+                        
+                        <div class="glass-panel p-4 mb-3 d-flex justify-content-between align-items-center" style="background: rgba(0,0,0,0.4);">
+                            <div>
+                                <div id="statusPill" class="status-pill status-approved">
+                                    <i class="bi bi-check-circle-fill me-2"></i> Approved
+                                </div>
+                                <div class="input-label small text-uppercase ls-1">Credit Score</div>
+                                <div class="d-flex align-items-baseline gap-2">
+                                    <span id="scoreDisplay" class="fw-bold fs-2 text-white">0</span>
+                                    <span id="scoreContext" class="badge bg-dark text-white border border-secondary">Excellent</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted small text-uppercase">Logic Processing</div>
+                                <div class="text-success small"><i class="bi bi-circle-fill" style="font-size: 8px;"></i> Online</div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-7">
+                                <div class="glass-panel p-4 h-100 position-relative overflow-hidden">
+                                    <div class="position-absolute top-0 end-0 p-3 opacity-25"><i class="bi bi-graph-up-arrow fs-1"></i></div>
+                                    <label class="input-label mb-2">Valuation Range</label>
+                                    <div class="big-money">
+                                        <span class="fs-5 text-muted align-top">₹</span><span id="valMin">0</span>
+                                        <span class="fs-4 text-muted mx-1">-</span>
+                                        <span id="valMax">0</span>
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1);">
+                                            <div class="progress-bar bg-primary" role="progressbar" style="width: 75%"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-2">
+                                            <small class="text-muted">LTV: <span id="valPercent" class="text-white">0%</span></small>
+                                            <small class="text-muted">Market fit</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="glass-panel p-4 h-100">
+                                    <label class="input-label mb-2">EMI Estimate</label>
+                                    <h2 class="fw-bold text-white mb-0">
+                                        <span class="fs-6 text-muted">₹</span><span id="emiMin">0</span>
+                                    </h2>
+                                    <small class="text-muted d-block mb-3">Monthly installment</small>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <div class="metric-tile flex-fill p-2">
+                                            <h5 class="m-0 text-white" id="finalTenure">0</h5>
+                                            <span style="font-size:0.6rem">Months</span>
+                                        </div>
+                                        <div class="metric-tile flex-fill p-2">
+                                            <h5 class="m-0 text-white"><span id="finalRate">0</span>%</h5>
+                                            <span style="font-size:0.6rem">Rate</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="rejectionSection" class="glass-panel p-4 mb-3" style="background: rgba(239, 68, 68, 0.1); border-color: var(--danger-glow); display: none;">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="bg-danger text-white rounded-circle p-2"><i class="bi bi-x-lg"></i></div>
+                                <h5 class="m-0 text-white">Application Declined</h5>
+                            </div>
+                            <ul id="rejectionList" class="mb-0 text-danger-emphasis fw-semibold"></ul>
+                        </div>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-4 col-md-2"><div class="metric-tile"><h4 id="debugMaxAnyDpd3">-</h4><span>Max DPD 3M</span></div></div>
+                            <div class="col-4 col-md-2"><div class="metric-tile"><h4 id="debugMaxCarDpd3">-</h4><span>Car DPD 3M</span></div></div>
+                            <div class="col-4 col-md-2"><div class="metric-tile"><h4 id="debugMaxCarDpd6">-</h4><span>Car DPD 6M</span></div></div>
+                            <div class="col-4 col-md-2"><div class="metric-tile"><h4 id="debugEligibleTenure">-</h4><span>Tenure OK</span></div></div>
+                            <div class="col-4 col-md-2"><div class="metric-tile"><h4 id="debugOverdue">-</h4><span>Overdue</span></div></div>
+                            <div class="col-4 col-md-2"><div class="metric-tile"><h4 id="debugDueCount">-</h4><span>High Due</span></div></div>
+                        </div>
+
+                        <button class="btn btn-sm btn-dark w-100 py-2 border border-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#jsonCollapse">
+                            <i class="bi bi-code-square me-2"></i> View Raw JSON Output
+                        </button>
+                        <div class="collapse mt-2" id="jsonCollapse">
+                            <div class="card card-body bg-dark border-secondary p-0">
+                                <pre id="rawOutput" class="m-0 p-3 text-info small" style="max-height: 200px; overflow: auto;"></pre>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            
+            <div style="height: 50px;"></div>
+        </div>
     </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script>
-    // --- 1. CONSTANTS ---
+    // --- CONSTANTS ---
     const CplConstants = {
         CPL_CAR_TYPE_NEW: 'new_car',
         CPL_CAR_TYPE_USED: 'used_car',
         CPL_CAR_TYPE_EXISTING: 'existing_car',
         CPL_CAR_TYPE_NOT_FINALIZED:'not_finalized',
         CPL_REPORT_REJECTION_REASONS : {
-            OWNER_LIMIT: "OWNER_LIMIT (More than 3rd Owner)",
-            COMMERCIAL_NEW: "COMMERCIAL_NEW (Comm. not eligible for New)",
-            HAS_DPD_IN_3M: "HAS_DPD_IN_3M (High DPD >30 in 3M)",
-            SCORE_TOO_LOW: "SCORE_TOO_LOW (Score below threshold)",
-            VEHICLE_AGE_EXCEEDED: "VEHICLE_AGE_EXCEEDED",
-            PAST_DUE_AMT_EXCEEDED: "PAST_DUE_AMT_EXCEEDED (>5k)",
-            HAS_OVERDUE_NEW: "HAS_OVERDUE_NEW (Overdue payments)",
-            CAR_DPD_3M: "CAR_DPD_3M (Active Car DPD 3M)",
-            CAR_DPD_6M: "CAR_DPD_6M (Active Car DPD 6M)",
-            CRITERIA_MISMATCH_UNKNOWN:"CRITERIA_MISMATCH_UNKNOWN"
+            OWNER_LIMIT: "Owner Limit Exceeded (>3)",
+            COMMERCIAL_NEW: "Comm. Ineligible for New Car",
+            HAS_DPD_IN_3M: "High DPD (>30) in 3M",
+            SCORE_TOO_LOW: "Credit Score Too Low",
+            VEHICLE_AGE_EXCEEDED: "Vehicle Age Exceeded",
+            PAST_DUE_AMT_EXCEEDED: "Past Due > 5k",
+            HAS_OVERDUE_NEW: "Excessive Overdue",
+            CAR_DPD_3M: "Active Car DPD (3M)",
+            CAR_DPD_6M: "Active Car DPD (6M)",
+            CRITERIA_MISMATCH_UNKNOWN:"Unknown Error"
         }
     };
 
-    // --- 2. LOGIC HELPER ---
+    // --- ANIMATIONS ---
+    function triggerConfetti() {
+        var end = Date.now() + (1 * 1000);
+        var colors = ['#3b82f6', '#ffffff'];
+
+        (function frame() {
+            confetti({
+                particleCount: 2,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: colors
+            });
+            confetti({
+                particleCount: 2,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: colors
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    }
+
+    function animateNumber(id, start, end, duration) {
+        const obj = document.getElementById(id);
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            obj.innerHTML = Math.floor(progress * (end - start) + start).toLocaleString();
+            if (progress < 1) window.requestAnimationFrame(step);
+        };
+        window.requestAnimationFrame(step);
+    }
+
+    // --- LOGIC HELPER ---
     const getDpdDays = (status) => {
         if (!status) return 0;
         const s = status.toString().trim();
@@ -357,13 +490,12 @@
         return 0; 
     };
 
-    // --- 3. CORE VALUATION LOGIC ---
+    // --- CORE LOGIC ---
     function carValuation(caseType, score, vehicleOwnerNumber, vage, commercialStatus, maxAnyDpd3, maxCarDpd3, maxCarDpd6, hasEligibleTenure, duecount, overdue) { 
         const REASONS = CplConstants.CPL_REPORT_REJECTION_REASONS;
         let [minval, maxval, res, tenure, rate] = [0, 0, 0, 0, 0];
         let rejectionReasons = [];
 
-        // Basic Checks
         if (isNaN(vehicleOwnerNumber)) vehicleOwnerNumber = 1;
         if (vehicleOwnerNumber > 3) return [0, 0, 0, tenure, rate, [REASONS.OWNER_LIMIT]];
         if (vage > 15) rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
@@ -371,7 +503,6 @@
         const commStatus = commercialStatus ? commercialStatus.toLowerCase() : 'no';
         const isCommercial = commStatus === 'yes';
 
-        // Score Buckets
         const isScoreNull = !score || score === 0;
         const isScoreNew = score === -1 || (score >= 1 && score <= 6);
         const s751 = score >= 751;
@@ -386,61 +517,41 @@
         if (caseType === CplConstants.CPL_CAR_TYPE_NEW) {
             if (isCommercial) return [0, 0, 0, 0, 0, [REASONS.COMMERCIAL_NEW]];
             [tenure, rate] = [84, 9]; 
-
             if (s751) {
-                if (duecount <= 0) { [minval, maxval, res] = [90, 95, 1]; }
-                else rejectionReasons.push(REASONS.PAST_DUE_AMT_EXCEEDED);
-            } 
-            else if ((score >= 701 && score <= 750) || isScoreNew) {
-                if (duecount <= 0) { [minval, maxval, res] = [80, 90, 1]; }
-                else rejectionReasons.push(REASONS.PAST_DUE_AMT_EXCEEDED);
-            } 
-            else if (s650_700) {
-                if (overdue <= 0) { [minval, maxval, res] = [70, 80, 1]; }
-                else rejectionReasons.push(REASONS.HAS_OVERDUE_NEW);
-            } 
-            else rejectionReasons.push(REASONS.SCORE_TOO_LOW);
+                if (duecount <= 0) { [minval, maxval, res] = [90, 95, 1]; } else rejectionReasons.push(REASONS.PAST_DUE_AMT_EXCEEDED);
+            } else if ((score >= 701 && score <= 750) || isScoreNew) {
+                if (duecount <= 0) { [minval, maxval, res] = [80, 90, 1]; } else rejectionReasons.push(REASONS.PAST_DUE_AMT_EXCEEDED);
+            } else if (s650_700) {
+                if (overdue <= 0) { [minval, maxval, res] = [70, 80, 1]; } else rejectionReasons.push(REASONS.HAS_OVERDUE_NEW);
+            } else rejectionReasons.push(REASONS.SCORE_TOO_LOW);
         }
         // CASE 2: USED CAR / NOT FINALIZED
         else if ([CplConstants.CPL_CAR_TYPE_USED, CplConstants.CPL_CAR_TYPE_NOT_FINALIZED].includes(caseType)) {
             [tenure, rate] = [60, 12]; 
             if (maxAnyDpd3 >= 30) return [0, 0, 0, tenure, rate, [REASONS.HAS_DPD_IN_3M]];
-
             if (!isCommercial) {
                 if (s726 || isScoreNull) {
                     if (vage <= 12) { [minval, maxval, res] = [90, 100, 1]; }
-                    else if (vage <= 15) { [minval, maxval, res] = [80, 90, 1]; } 
-                    else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
-                } 
-                else if ((score >= 701 && score <= 725) || isScoreNew) {
+                    else if (vage <= 15) { [minval, maxval, res] = [80, 90, 1]; } else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
+                } else if ((score >= 701 && score <= 725) || isScoreNew) {
                     if (vage <= 12) { [minval, maxval, res] = [80, 90, 1]; }
-                    else if (vage <= 15) { [minval, maxval, res] = [75, 85, 1]; }
-                    else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
-                } 
-                else if (s650_700) {
+                    else if (vage <= 15) { [minval, maxval, res] = [75, 85, 1]; } else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
+                } else if (s650_700) {
                     if (vage <= 12) { [minval, maxval, res] = [70, 80, 1]; }
-                    else if (vage <= 15) { [minval, maxval, res] = [65, 75, 1]; }
-                    else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
-                } 
-                else {
+                    else if (vage <= 15) { [minval, maxval, res] = [65, 75, 1]; } else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
+                } else {
                     rejectionReasons.push(REASONS.SCORE_TOO_LOW);
                     if (vage > 15) rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
                 }
             } else {
-                // Commercial
                 if (s726) { [minval, maxval, res] = [70, 80, 1]; }
                 else if ((score >= 701 && score <= 725) || isScoreNew) { [minval, maxval, res] = [70, 80, 1]; }
                 else if (s650_700) { [minval, maxval, res] = [60, 70, 1]; }
                 else if (isScoreNull) {
                     if (vage <= 12) { [minval, maxval, res] = [70, 80, 1]; }
-                    else if (vage <= 15) { [minval, maxval, res] = [60, 70, 1]; }
-                    else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
-                } 
-                else rejectionReasons.push(REASONS.SCORE_TOO_LOW);
-                
-                if (vage > 15 && !rejectionReasons.includes(REASONS.VEHICLE_AGE_EXCEEDED)) {
-                    rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
-                }
+                    else if (vage <= 15) { [minval, maxval, res] = [60, 70, 1]; } else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
+                } else rejectionReasons.push(REASONS.SCORE_TOO_LOW);
+                if (vage > 15 && !rejectionReasons.includes(REASONS.VEHICLE_AGE_EXCEEDED)) rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
             }
         }
         // CASE 3: EXISTING LOAN
@@ -451,15 +562,11 @@
                     if (maxCarDpd3 > 0) rejectionReasons.push(REASONS.CAR_DPD_3M);
                     if (s701 && !isScoreNew) {
                         if (vage <= 10) { [minval, maxval, res] = [150, 200, 1]; }
-                        else if (vage <= 15) { [minval, maxval, res] = [80, 100, 1]; }
-                        else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
-                    } 
-                    else if (s650_700 || isScoreNew) {
+                        else if (vage <= 15) { [minval, maxval, res] = [80, 100, 1]; } else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
+                    } else if (s650_700 || isScoreNew) {
                         if (vage <= 10) { [minval, maxval, res] = [90, 100, 1]; }
-                        else if (vage <= 15) { [minval, maxval, res] = [80, 90, 1]; }
-                        else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
-                    } 
-                    else if (isScoreLow) {
+                        else if (vage <= 15) { [minval, maxval, res] = [80, 90, 1]; } else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
+                    } else if (isScoreLow) {
                         rejectionReasons.push(REASONS.SCORE_TOO_LOW);
                         if (vage > 15) rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
                     }
@@ -467,75 +574,55 @@
                     if (maxCarDpd6 > 0) rejectionReasons.push(REASONS.CAR_DPD_6M);
                     if (s701 || isScoreNull) { 
                         if (vage <= 10) { [minval, maxval, res] = [90, 140, 1]; }
-                        else if (vage <= 15) { [minval, maxval, res] = [80, 90, 1]; }
-                        else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
+                        else if (vage <= 15) { [minval, maxval, res] = [80, 90, 1]; } else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
                     } else {
                         rejectionReasons.push(REASONS.SCORE_TOO_LOW);
                         if (vage > 15) rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
                     }
                 }
             } else {
-                // Commercial Existing
                 if (isHighTenure) {
                     if (maxCarDpd3 > 0) rejectionReasons.push(REASONS.CAR_DPD_3M);
                     if (s701 || s650_700 || isScoreNew) {
-                        if (vage <= 10) { [minval, maxval, res] = [70, 80, 1]; }
-                        else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
+                        if (vage <= 10) { [minval, maxval, res] = [70, 80, 1]; } else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
                     } else rejectionReasons.push(REASONS.SCORE_TOO_LOW);
                 } else {
                     if (maxCarDpd6 > 0) rejectionReasons.push(REASONS.CAR_DPD_6M);
                     if (s701 || isScoreNull) {
-                        if (vage <= 10) { [minval, maxval, res] = [70, 80, 1]; }
-                        else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
+                        if (vage <= 10) { [minval, maxval, res] = [70, 80, 1]; } else rejectionReasons.push(REASONS.VEHICLE_AGE_EXCEEDED);
                     } else rejectionReasons.push(REASONS.SCORE_TOO_LOW);
                 }
             }
-            if (rejectionReasons.includes(REASONS.CAR_DPD_3M) || rejectionReasons.includes(REASONS.CAR_DPD_6M)) {
-                [minval, maxval, res] = [0, 0, 0];
-            }
+            if (rejectionReasons.includes(REASONS.CAR_DPD_3M) || rejectionReasons.includes(REASONS.CAR_DPD_6M)) [minval, maxval, res] = [0, 0, 0];
         }
 
-        if (res === 0 && rejectionReasons.length === 0) {
-            rejectionReasons.push(REASONS.CRITERIA_MISMATCH_UNKNOWN);
-        }
+        if (res === 0 && rejectionReasons.length === 0) rejectionReasons.push(REASONS.CRITERIA_MISMATCH_UNKNOWN);
         rejectionReasons = [...new Set(rejectionReasons)];
         return [minval, maxval, res, tenure, rate, rejectionReasons];
     }
 
-    // --- 4. DATA PROCESSOR ---
+    // --- DATA PROCESSOR ---
     function processEquifaxData(equifaxData, vage, caseType, vehicleOwnerNumber, commercialStatus, fairPrice, onRoadPrice) {
-        
-        // Unwrapping Logic
         let report = equifaxData;
         if (equifaxData?.data?.reportData) report = equifaxData.data.reportData;
         else if (equifaxData?.reportData) report = equifaxData.reportData;
 
-        // Extract Score
         let score = 0;
-        if (report?.reportSummary?.creditScore?.score) {
-            score = parseInt(report.reportSummary.creditScore.score) || 0;
-        }
+        if (report?.reportSummary?.creditScore?.score) score = parseInt(report.reportSummary.creditScore.score) || 0;
 
-        // Aggregate Loans
         let loanDetails = [];
         if (report?.creditAnalysis?.loans) {
             const loansObj = report.creditAnalysis.loans;
             loanDetails = [
-                ...(loansObj.personalLoans ?? []),
-                ...(loansObj.homeLoans ?? []),
-                ...(loansObj.autoLoans ?? []),
-                ...(loansObj.educationLoans ?? []),
-                ...(loansObj.businessLoans ?? []),
-                ...(loansObj.goldLoans ?? []),
+                ...(loansObj.personalLoans ?? []), ...(loansObj.homeLoans ?? []), ...(loansObj.autoLoans ?? []),
+                ...(loansObj.educationLoans ?? []), ...(loansObj.businessLoans ?? []), ...(loansObj.goldLoans ?? []),
                 ...(report.creditAnalysis?.otherLoans ?? []),
             ];
         }
 
-        // Generate Dates
         const today = new Date();
         const dateKeys = Array.from({ length: 6 }, (_, i) => {
-            const d = new Date();
-            d.setMonth(d.getMonth() - i);
+            const d = new Date(); d.setMonth(d.getMonth() - i);
             return `${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getFullYear().toString().slice(-2)}`;
         });
         const last3Months = new Set(dateKeys.slice(0, 3));
@@ -564,26 +651,21 @@
                     if (isCar && days > maxCarDpd6) maxCarDpd6 = days;
                 }
             }
-
             if (isCar) {
                 if (loan.accountStatus === 'Open' && loan.accountOpenDate) {
                     const dOpen = new Date(loan.accountOpenDate);
                     const diff = (today.getFullYear() - dOpen.getFullYear()) * 12 + (today.getMonth() - dOpen.getMonth());
                     if (diff >= 12) hasActiveCarLoanGt12m = true;
-                } 
-                else if (loan.accountStatus === 'Closed' && loan.accountCloseDate) {
+                } else if (loan.accountStatus === 'Closed' && loan.accountCloseDate) {
                     const dClose = new Date(loan.accountCloseDate);
                     const diff = (today.getFullYear() - dClose.getFullYear()) * 12 + (today.getMonth() - dClose.getMonth());
                     if (diff <= 6) hasClosedCarLoanLt6m = true;
                 }
             }
         }
-
         const hasEligibleTenure = hasActiveCarLoanGt12m || hasClosedCarLoanLt6m;
-
         const [minval, maxval, res, tenure, rate, rejectionReasons] = carValuation(
-            caseType, score, vehicleOwnerNumber, vage, commercialStatus,
-            maxAnyDpd3, maxCarDpd3, maxCarDpd6,
+            caseType, score, vehicleOwnerNumber, vage, commercialStatus, maxAnyDpd3, maxCarDpd3, maxCarDpd6,
             hasEligibleTenure, duecount, overdue
         );
 
@@ -600,22 +682,19 @@
             output: {
                 score, res, minValuation, maxValuation, minEMI, maxEMI,
                 evaluate_percent: `${minval}% - ${maxval}%`,
-                scoreColor: score >= 725 ? '#1BC76D' : (score >= 650 ? '#EEC000' : '#E23E44'),
                 rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : null,
-                finalTenure: tenure,
-                finalRate: rate
+                finalTenure: tenure, finalRate: rate
             },
-            debug: {
-                maxAnyDpd3, maxCarDpd3, maxCarDpd6, hasEligibleTenure, duecount, overdue, dateKeysUsed: Array.from(last6Months)
-            }
+            debug: { maxAnyDpd3, maxCarDpd3, maxCarDpd6, hasEligibleTenure, duecount, overdue }
         };
     }
 
-    // --- 5. UI CONTROLLER ---
+    // --- UI CONTROLLER ---
     function runValuation() {
         try {
-            const caseType = document.getElementById('caseType').value;
-            const commercialStatus = document.getElementById('commercialStatus').value;
+            // Get inputs (Note: Radios need querySelector)
+            const caseType = document.querySelector('input[name="caseType"]:checked').value;
+            const commercialStatus = document.querySelector('input[name="commercialStatus"]:checked').value;
             const vage = parseInt(document.getElementById('vage').value) || 0;
             const ownerNumber = parseInt(document.getElementById('ownerNumber').value) || 1;
             const fairPrice = parseFloat(document.getElementById('fairPrice').value) || 0;
@@ -627,51 +706,44 @@
             const equifaxData = JSON.parse(jsonText);
             const result = processEquifaxData(equifaxData, vage, caseType, ownerNumber, commercialStatus, fairPrice, onRoadPrice);
 
-            // Toggle views
-            document.getElementById('welcomePlaceholder').style.display = 'none';
+            // document.getElementById('welcomePlaceholder').style.display = 'none';
+            document.getElementById('welcomePlaceholder')?.classList.add('hidden');
+
             document.getElementById('resultsArea').style.display = 'block';
 
-            // Populate Output
+            // Populate Raw
             document.getElementById('rawOutput').textContent = JSON.stringify(result, null, 2);
 
             const out = result.output;
             const dbg = result.debug;
 
-            // Status Banner
-            const banner = document.getElementById('mainResultBanner');
-            const resTitle = document.getElementById('resTitle');
-            const resSubtitle = document.getElementById('resSubtitle');
+            // Update UI Elements
+            const statusPill = document.getElementById('statusPill');
+            const rejectSection = document.getElementById('rejectionSection');
 
-            banner.classList.remove('default', 'approved', 'rejected');
             if (out.rejectionReasons) {
-                banner.classList.add('rejected');
-                resTitle.textContent = "Application Rejected";
-                resSubtitle.textContent = "Logic criteria mismatch found";
-                document.getElementById('rejectionSection').style.display = 'block';
-                
-                const list = document.getElementById('rejectionList');
-                list.innerHTML = "";
-                out.rejectionReasons.forEach(r => {
-                    const li = document.createElement('li');
-                    li.textContent = r;
-                    list.appendChild(li);
-                });
+                statusPill.className = "status-pill status-rejected";
+                statusPill.innerHTML = '<i class="bi bi-x-circle-fill me-2"></i> Declined';
+                rejectSection.style.display = 'block';
+                document.getElementById('rejectionList').innerHTML = out.rejectionReasons.map(r => `<li>${r}</li>`).join('');
             } else {
-                banner.classList.add('approved');
-                resTitle.textContent = "Application Approved";
-                resSubtitle.textContent = "All logic checks passed";
-                document.getElementById('rejectionSection').style.display = 'none';
+                statusPill.className = "status-pill status-approved";
+                statusPill.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Approved';
+                rejectSection.style.display = 'none';
+                triggerConfetti();
             }
 
-            // Metrics
-            document.getElementById('scoreDisplay').textContent = out.score;
-            document.getElementById('valAmount').innerText = `₹${out.minValuation.toLocaleString()} - ₹${out.maxValuation.toLocaleString()}`;
-            document.getElementById('valPercent').innerText = out.evaluate_percent + " LTV";
-            document.getElementById('emiAmount').innerText = `₹${out.minEMI.toLocaleString()} - ₹${out.maxEMI.toLocaleString()}`;
+            // Animate Numbers
+            animateNumber('scoreDisplay', 0, out.score, 1000);
+            animateNumber('valMin', 0, out.minValuation, 1500);
+            animateNumber('valMax', 0, out.maxValuation, 1500);
+            animateNumber('emiMin', 0, out.minEMI, 1500);
+
+            document.getElementById('valPercent').innerText = out.evaluate_percent;
             document.getElementById('finalTenure').innerText = out.finalTenure;
             document.getElementById('finalRate').innerText = out.finalRate;
 
-            // Debug Tiles
+            // Debug
             document.getElementById('debugMaxAnyDpd3').innerText = dbg.maxAnyDpd3;
             document.getElementById('debugMaxCarDpd3').innerText = dbg.maxCarDpd3;
             document.getElementById('debugMaxCarDpd6').innerText = dbg.maxCarDpd6;
@@ -681,7 +753,6 @@
 
         } catch (e) {
             alert("Error parsing JSON: " + e.message);
-            console.error(e);
         }
     }
 
@@ -690,31 +761,9 @@
         const m = (d.getMonth() + 1).toString().padStart(2, '0');
         const y = d.getFullYear().toString().slice(-2);
         const currMonth = `${m}-${y}`;
-
-        const sample = {
-            "reportData": {
-                "reportSummary": { "creditScore": { "score": "760" } },
-                "creditAnalysis": {
-                    "loans": {
-                        "autoLoans": [
-                            {
-                                "accountType": "Auto Loan",
-                                "accountStatus": "Open",
-                                "accountOpenDate": "2021-01-15",
-                                "accountPastDueAmount": "0",
-                                "paymentHistory": [
-                                    { "month": currMonth, "status": "000" },
-                                    { "month": "11-24", "status": "000" } 
-                                ]
-                            }
-                        ]
-                    }
-                }
-            }
-        };
+        const sample = { "reportData": { "reportSummary": { "creditScore": { "score": "760" } }, "creditAnalysis": { "loans": { "autoLoans": [ { "accountType": "Auto Loan", "accountStatus": "Open", "accountOpenDate": "2021-01-15", "accountPastDueAmount": "0", "paymentHistory": [ { "month": currMonth, "status": "000" }, { "month": "11-24", "status": "000" } ] } ] } } } };
         document.getElementById('equifaxJson').value = JSON.stringify(sample, null, 2);
     }
 </script>
-
 </body>
 </html>
